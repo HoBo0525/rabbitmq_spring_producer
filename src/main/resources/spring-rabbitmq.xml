@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:content="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+
+
+<!--    导入rabbitMQ.properties文件-->
+    <content:property-placeholder location="classpath:rabbitmq.properties"/>
+
+<!--    定义ConnectionFactory-->
+    <rabbit:connection-factory id="connectionFactory"
+                               host="${rabbitmq.host}"
+                               port="${rabbitmq.port}"
+                               virtual-host="${rabbitmq.virtual-host}"
+                               username="${rabbitmq.username}"
+                               password="${rabbitmq.password}" />
+
+<!--    定义管理交换机、队列-->
+    <rabbit:admin connection-factory="connectionFactory"/>
+<!--    定义rabbitTemplate-->
+    <rabbit:template id="rabbitTemplate" connection-factory="connectionFactory"/>
+
+
+<!--    定义持久化队列     auto-declare="true"持久-->
+<!--    普通队列-->
+        <rabbit:queue name="spring_queue" id="spring_queue" auto-declare="true"/>
+
+
+<!--    定义要与Fanout广播交换机绑定的两个队列-->
+    <rabbit:queue name="spring_fanout1" id="spring_fanout1" auto-declare="true"/>
+    <rabbit:queue name="spring_fanout2" id="spring_fanout2" auto-declare="true"/>
+<!--    定义Fanout交换机-->
+    <rabbit:fanout-exchange name="spring_fanout" id="spring_fanout" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="spring_fanout1"></rabbit:binding>
+            <rabbit:binding queue="spring_fanout2"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+
+<!--    定义要与Topic广播交换机绑定的三个队列-->
+    <rabbit:queue name="spring_topic1" id="spring_topic1" auto-declare="true"/>
+    <rabbit:queue name="spring_topic2" id="spring_topic2" auto-declare="true"/>
+    <rabbit:queue name="spring_topic3" id="spring_topic3" auto-declare="true"/>
+<!--    定义Topic交换机 并绑定三个队列-->
+    <rabbit:topic-exchange name="spring_topic" id="spring_topic" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding pattern="atguigu.*" queue="spring_topic1"></rabbit:binding>
+            <rabbit:binding pattern="atguigu.#" queue="spring_topic2"/>
+            <rabbit:binding pattern="guigu.#" queue="spring_topic3"/>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+
+</beans>
